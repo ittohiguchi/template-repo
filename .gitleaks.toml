@@ -1,0 +1,4 @@
+# Extends the default gitleaks ruleset. Add [[allowlists]] entries here for
+# false positives instead of disabling rules.
+[extend]
+useDefault = true
