@@ -1,0 +1,19 @@
+# 開発コマンドの単一入口。言語別の lint / typecheck / test / build も
+# 必ずここに task として追加する(セットアップ手順は docs/setup-checklist.md)。
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  setup:
+    desc: git hook (pre-commit) をインストールする
+    cmds:
+      - pre-commit install
+
+  check:
+    desc: 全ファイルに pre-commit hooks を実行する
+    cmds:
+      - pre-commit run --all-files
