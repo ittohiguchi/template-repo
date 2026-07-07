@@ -1,0 +1,33 @@
+name: pre-commit-autoupdate
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # persist-credentials can stay false: create-pull-request authenticates
+      # with its token input, not the credentials persisted by checkout.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - run: pipx run pre-commit autoupdate
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: chore/pre-commit-autoupdate
+          title: "chore: pre-commit autoupdate"
+          commit-message: "chore: pre-commit autoupdate"
+          body: |
+            Weekly `pre-commit autoupdate` of hook revisions.
+
+            Note: workflows do not trigger on PRs created with `GITHUB_TOKEN`.
+            Close and reopen this PR to run CI checks before merging.
+          delete-branch: true

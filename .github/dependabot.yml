@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # Language package ecosystems (npm, pip, ...) are added during initial
+  # project setup (see CLAUDE.md).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Implementation: wait a few days after a release before updating, so a
+    # compromised release is likely pulled before it reaches this repo.
+    cooldown:
+      default-days: 7
+    groups:
+      # Single weekly PR for all action bumps to reduce PR noise.
+      github-actions:
+        patterns:
+          - "*"

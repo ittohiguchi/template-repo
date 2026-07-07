@@ -62,3 +62,7 @@ pnpm-debug.log*
 
 # === Docker ===
 docker-compose.override.yml
+
+# === Git worktrees ===
+.worktrees/
+.claude/worktrees/
