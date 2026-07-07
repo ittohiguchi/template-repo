@@ -13,7 +13,14 @@ tasks:
     cmds:
       - pre-commit install
 
+  # check は「全検証を束ねる親 task」。言語別の lint / typecheck / test を
+  # 追加したら deps としてここにぶら下げ、CI もこの task を正とする。
   check:
-    desc: 全ファイルに pre-commit hooks を実行する
+    desc: 全検証を実行する(現状は pre-commit hooks のみ)
     cmds:
       - pre-commit run --all-files
+
+  repo-init:
+    desc: GitHub リポジトリ設定を冪等に適用する(引数は scripts/init-repo-settings.sh 参照)
+    cmds:
+      - bash scripts/init-repo-settings.sh {{.CLI_ARGS}}

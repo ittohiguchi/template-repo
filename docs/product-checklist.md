@@ -9,9 +9,16 @@ Confirm with the user before starting: deploy target (cloud, runtime),
 whether staging and prod environments both exist, and which parts of the
 exploration code survive into the product.
 
+Graduation is a move between directories, not a new repository: code leaves
+`sandbox/` and enters `apps/<component>/` by being restructured to conform
+to the architecture below. `sandbox/` stays available for exploration and is
+permanently exempt from every rule in sections 1–2.
+
 ## 1. Architecture: DDD + hexagonal
 
-- Restructure the code into hexagonal layers:
+- Production code lives under `apps/`, one directory per deployable
+  component (`apps/backend`, `apps/frontend`, ...); IaC lives under `infra/`.
+- Restructure each component into hexagonal layers:
   - `domain/models` — pure domain objects. No framework types (no ORM base
     classes, no Pydantic/serialization frameworks, no HTTP types).
   - `domain/ports` — interfaces the domain needs (repositories, external
@@ -29,6 +36,7 @@ exploration code survive into the product.
 - Enforce import direction with the language's import-contract tool
   (import-linter for Python, dependency-cruiser or eslint boundaries for
   TypeScript, ArchUnit for JVM, go-arch-lint for Go, or equivalent).
+  Scope the contracts to `apps/`; never include `sandbox/`.
   Minimum contracts:
   - layers: adapters above domain (adapters may import domain, not reverse);
   - domain isolation: domain must not import adapters or framework modules;
