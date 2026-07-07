@@ -25,7 +25,7 @@ tasks:
   test:gitkeep:
     desc: .gitkeep 検出スクリプトのテストを実行する
     cmds:
-      - bash scripts/test-check-gitkeep.sh
+      - bash tests/scripts/test-check-gitkeep.sh
 
   repo-init:
     desc: GitHub リポジトリ設定を冪等に適用する(引数は scripts/init-repo-settings.sh 参照)

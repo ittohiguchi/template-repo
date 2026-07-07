@@ -2,7 +2,8 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-check_script="${script_dir}/check-gitkeep.sh"
+repo_root="$(cd "${script_dir}/../.." && pwd)"
+check_script="${repo_root}/scripts/check-gitkeep.sh"
 
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "${tmpdir}"' EXIT
