@@ -1,6 +1,6 @@
 # Language-agnostic hooks only. Language-specific lint/format hooks are added
 # during initial project setup (see CLAUDE.md).
-# Hook revs are bumped weekly by .github/workflows/pre-commit-autoupdate.yml
+# Hook revs are bumped weekly by .github/workflows/general-pre-commit-autoupdate.yaml
 # because dependabot does not support the pre-commit ecosystem.
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
