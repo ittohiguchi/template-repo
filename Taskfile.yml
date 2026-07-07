@@ -17,8 +17,15 @@ tasks:
   # 追加したら deps としてここにぶら下げ、CI もこの task を正とする。
   check:
     desc: 全検証を実行する(現状は pre-commit hooks のみ)
+    deps:
+      - test:gitkeep
     cmds:
       - pre-commit run --all-files
+
+  test:gitkeep:
+    desc: .gitkeep 検出スクリプトのテストを実行する
+    cmds:
+      - bash scripts/test-check-gitkeep.sh
 
   repo-init:
     desc: GitHub リポジトリ設定を冪等に適用する(引数は scripts/init-repo-settings.sh 参照)

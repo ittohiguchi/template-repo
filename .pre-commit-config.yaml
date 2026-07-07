@@ -2,6 +2,14 @@
 # during initial project setup (see CLAUDE.md).
 # Hook revs are kept up to date by Renovate (pre-commit manager).
 repos:
+  - repo: local
+    hooks:
+      - id: no-stale-gitkeep
+        name: 不要な .gitkeep を検出する
+        entry: bash scripts/check-gitkeep.sh
+        language: system
+        pass_filenames: false
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
