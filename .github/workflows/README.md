@@ -10,8 +10,7 @@
 | ファイル | トリガー | 説明 |
 |----------|----------|------|
 | `general-pre-commit.yaml` | PR / push to main | pre-commit hooks を全ファイルに実行(ローカルと同一の検証) |
-| `general-secret-scan.yaml` | PR / push to main / 週次 | 最新リリースの gitleaks CLI で git 全履歴をスキャン |
-| `general-pre-commit-autoupdate.yaml` | 週次 / 手動 | pre-commit hook rev の更新 PR を自動作成 |
+| `general-secret-scan.yaml` | PR / push to main / 週次 | gitleaks CLI で git 全履歴をスキャン(バージョンの正本は `.pre-commit-config.yaml` の rev) |
 
 ## プロジェクト固有ワークフローの追加
 
@@ -26,5 +25,5 @@
 
 ## 共通ルール
 
-- GitHub Actions は full commit SHA で pin し、version tag をコメントで残す(dependabot が SHA を更新する)。
+- GitHub Actions は full commit SHA で pin し、version tag をコメントで残す(SHA の更新は Renovate が担う)。
 - workflow には最小の `permissions` を明示する(zizmor が検査する)。

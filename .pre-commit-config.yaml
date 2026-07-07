@@ -1,7 +1,6 @@
 # Language-agnostic hooks only. Language-specific lint/format hooks are added
 # during initial project setup (see CLAUDE.md).
-# Hook revs are bumped weekly by .github/workflows/general-pre-commit-autoupdate.yaml
-# because dependabot does not support the pre-commit ecosystem.
+# Hook revs are kept up to date by Renovate (pre-commit manager).
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -36,5 +35,9 @@ repos:
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.37.4
     hooks:
-      - id: check-dependabot
       - id: check-github-workflows
+
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 43.253.1
+    hooks:
+      - id: renovate-config-validator

@@ -1,0 +1,20 @@
+// 依存更新は Renovate に集約する(GitHub Actions の SHA pin、pre-commit hook rev、
+// 言語 lockfile)。Mend Renovate App が org にインストールされている前提。
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    // config:recommended + Actions の digest pin 維持 + lockfile 週次更新など
+    "config:best-practices",
+    ":timezone(Asia/Tokyo)",
+  ],
+  // pre-commit manager は opt-in
+  "pre-commit": { enabled: true },
+  // Business: リリース直後の compromise を踏まないため、7日置いてから更新する。
+  // 脆弱性対応 PR (vulnerabilityAlerts) はこの待機に縛られない。
+  minimumReleaseAge: "7 days",
+  schedule: ["before 9am on monday"],
+  packageRules: [
+    { matchManagers: ["github-actions"], groupName: "github-actions" },
+    { matchManagers: ["pre-commit"], groupName: "pre-commit hooks" },
+  ],
+}
