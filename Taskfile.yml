@@ -16,9 +16,10 @@ tasks:
   # check は「全検証を束ねる親 task」。言語別の lint / typecheck / test を
   # 追加したら deps としてここにぶら下げ、CI もこの task を正とする。
   check:
-    desc: 全検証を実行する(現状は pre-commit hooks のみ)
+    desc: 全検証を実行する
     deps:
       - test:gitkeep
+      - test:repo-init
     cmds:
       - pre-commit run --all-files
 
@@ -26,6 +27,11 @@ tasks:
     desc: .gitkeep 検出スクリプトのテストを実行する
     cmds:
       - bash tests/scripts/test-check-gitkeep.sh
+
+  test:repo-init:
+    desc: GitHub リポジトリ初期化スクリプトのテストを実行する
+    cmds:
+      - bash tests/scripts/test-init-repo-settings.sh
 
   repo-init:
     desc: GitHub リポジトリ設定を冪等に適用する(引数は scripts/init-repo-settings.sh 参照)
