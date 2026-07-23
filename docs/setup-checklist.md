@@ -1,7 +1,16 @@
 # Setup Checklist (phase 1)
 
 Agent-facing. Run once, right after creating a repository from this template
-and deciding the language/stack. Report each item's result to the user.
+and deciding the language/stack. This is not a health check to repeat at every
+agent startup. Rerun only when applying a repository-setting change. Report
+each item's result to the user.
+
+## Prerequisites
+
+- Install the local tools: `brew install go-task pre-commit gh jq` or the
+  platform equivalent.
+- Run `gh auth status` and confirm the authenticated account has repository
+  admin permission. Repository rulesets and Actions permissions require it.
 
 ## Preinstalled guardrails (do not recreate)
 
@@ -20,11 +29,14 @@ and deciding the language/stack. Report each item's result to the user.
 - `Taskfile.yml`: single entry point for dev commands (`task --list`).
 - `scripts/init-repo-settings.sh` (`task repo-init`): idempotent GitHub
   repository settings.
+- `.github/pull_request_template.md`: captures intent, completion criteria,
+  validation, risks, and review questions. The PR body becomes the default
+  squash-commit body.
 - `sandbox/` / `apps/` / `infra/`: phase-model directories (see `CLAUDE.md`).
 
 ## Checklist
 
-1. Run `task repo-init` (requires `gh` authenticated with admin on the repo).
+1. Run `task repo-init`.
    Verify the Renovate App covers this repository — it is installed at the
    organization level for all repositories: <https://github.com/apps/renovate>.
 2. Establish the project commands: lint, format, typecheck, test, build.
@@ -46,8 +58,12 @@ and deciding the language/stack. Report each item's result to the user.
 4. Add language-specific lint/format hooks to `.pre-commit-config.yaml`.
 5. Update `.env.example` with the real variable names (placeholder values
    only; never real values).
-6. Run `task setup` locally (installs the pre-commit git hook). Prerequisites:
-   `brew install pre-commit go-task` or equivalent.
+6. Run `task setup` locally to install the pre-commit git hook.
 7. Replace the description at the top of `CLAUDE.md` with a one-paragraph
    project description. Keep every other section; the repository starts in
    the exploration phase — work in `sandbox/`.
+8. After the real maintainers and repository visibility are known:
+   - Add `.github/CODEOWNERS` with actual users or teams; do not commit
+     placeholder owners.
+   - Before accepting external users or contributions, add a Japanese
+     `SECURITY.md` with the supported versions and a private reporting route.

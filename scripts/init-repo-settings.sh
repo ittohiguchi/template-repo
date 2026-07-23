@@ -10,6 +10,18 @@
 #   ci が存在しない段階で required にすると PR が永久にブロックされるため、既定には含めない。
 set -euo pipefail
 
+missing_commands=()
+for command_name in gh jq; do
+  if ! command -v "${command_name}" >/dev/null 2>&1; then
+    missing_commands+=("${command_name}")
+  fi
+done
+if [ "${#missing_commands[@]}" -gt 0 ]; then
+  echo "ERROR: 不足しているコマンド: ${missing_commands[*]}" >&2
+  echo "macOS (Homebrew): brew install ${missing_commands[*]}" >&2
+  exit 1
+fi
+
 CHECKS="pre-commit,gitleaks"
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -32,8 +44,12 @@ gh api -X PATCH "repos/${REPO}" \
   -F allow_squash_merge=true \
   -F allow_merge_commit=false \
   -F allow_rebase_merge=false \
-  -F delete_branch_on_merge=true >/dev/null
-echo "OK: merge 設定 (squash のみ / merge 後ブランチ自動削除)"
+  -F allow_auto_merge=true \
+  -F allow_update_branch=true \
+  -F delete_branch_on_merge=true \
+  -f squash_merge_commit_title=PR_TITLE \
+  -f squash_merge_commit_message=PR_BODY >/dev/null
+echo "OK: merge 設定 (squash のみ / auto-merge / ブランチ更新・自動削除)"
 
 # secret scanning + push protection(public repo は無料。private は GHAS が必要で失敗する)
 if gh api -X PATCH "repos/${REPO}" --input - >/dev/null <<'JSON'
