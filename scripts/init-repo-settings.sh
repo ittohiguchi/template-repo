@@ -37,6 +37,7 @@ while [ $# -gt 0 ]; do
 done
 
 REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+IS_PRIVATE=$(gh repo view --json isPrivate -q .isPrivate)
 echo "==> ${REPO} に設定を適用します (required checks: ${CHECKS})"
 
 # merge 方式は squash のみ(ruleset 側の allowed_merge_methods と揃える)
@@ -51,15 +52,38 @@ gh api -X PATCH "repos/${REPO}" \
   -f squash_merge_commit_message=PR_BODY >/dev/null
 echo "OK: merge 設定 (squash のみ / auto-merge / ブランチ更新・自動削除)"
 
-# secret scanning + push protection(public repo は無料。private は GHAS が必要で失敗する)
-if gh api -X PATCH "repos/${REPO}" --input - >/dev/null <<'JSON'
-{"security_and_analysis": {"secret_scanning": {"status": "enabled"}, "secret_scanning_push_protection": {"status": "enabled"}}}
-JSON
-then
-  echo "OK: secret scanning + push protection"
+# Business: 組織では従量課金なしで利用できる場合に限り Secret Protection を許可する。
+if [ "${IS_PRIVATE}" = "true" ]; then
+  SECURITY_STATUS="disabled"
+  SECURITY_SCOPE="private"
+  SECURITY_DISPLAY="無効"
 else
-  echo "SKIP: secret scanning は有効化できませんでした(private repo では GHAS の課金が必要)" >&2
+  SECURITY_STATUS="enabled"
+  SECURITY_SCOPE="public"
+  SECURITY_DISPLAY="有効"
 fi
+
+security_json=$(jq -n --arg status "${SECURITY_STATUS}" '{
+  security_and_analysis: {
+    secret_scanning: {status: $status},
+    secret_scanning_push_protection: {status: $status}
+  }
+}')
+echo "${security_json}" | gh api -X PATCH "repos/${REPO}" --input - >/dev/null
+
+actual_security_status=$(
+  gh api "repos/${REPO}" \
+    --jq '[
+      .security_and_analysis.secret_scanning.status,
+      .security_and_analysis.secret_scanning_push_protection.status
+    ] | join(",")'
+)
+expected_security_status="${SECURITY_STATUS},${SECURITY_STATUS}"
+if [ "${actual_security_status}" != "${expected_security_status}" ]; then
+  echo "ERROR: secret scanning 設定の検証に失敗しました (expected: ${expected_security_status}, actual: ${actual_security_status})" >&2
+  exit 1
+fi
+echo "OK: ${SECURITY_SCOPE} repository: secret scanning + push protection ${SECURITY_DISPLAY}"
 
 # 脆弱性の検知は Dependabot alerts に任せる。修正 PR の作成は Renovate
 # (vulnerabilityAlerts)が担うため、Dependabot 側の automated security fixes は

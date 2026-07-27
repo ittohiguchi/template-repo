@@ -37,6 +37,8 @@ each item's result to the user.
 ## Checklist
 
 1. Run `task repo-init`.
+   Confirm that public repositories have secret scanning and push protection
+   enabled, while private repositories report both settings as disabled.
    Verify the Renovate App covers this repository — it is installed at the
    organization level for all repositories: <https://github.com/apps/renovate>.
 2. Establish the project commands: lint, format, typecheck, test, build.

@@ -54,6 +54,9 @@ graduates from `sandbox/` into `apps/` by being restructured to conform.
   config or custom update workflows.
 - Repository settings (branch ruleset, secret scanning, permissions) are
   applied with `task repo-init`, which must stay idempotent.
+- `task repo-init` enables GitHub secret scanning only for public repositories.
+  Private repositories must keep metered Advanced Security features disabled,
+  and initialization must fail if the resulting GitHub settings disagree.
 - Workflow files follow `{prefix}-{what}.yaml` naming (`general-pre-commit`,
   `python-lint`, `terraform-apply`). Conventions and the orchestrator pattern
   are documented in `.github/workflows/README.md`.
