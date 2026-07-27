@@ -207,3 +207,37 @@ if [[ "${mismatch_status}" != "1" ]]; then
   exit 1
 fi
 assert_contains "${mismatch_output}" "ERROR: 課金予算の検証に失敗"
+
+: >"${calls_file}"
+: >"${budget_reads_file}"
+unexpected_budgets="$(
+  jq '.[0].budgets += [{
+    id: "future-id",
+    budget_type: "ProductPricing",
+    budget_amount: 10,
+    prevent_further_usage: false,
+    budget_scope: "organization",
+    budget_product_sku: "future_product"
+  }]' <<<"${final_budgets}"
+)"
+set +e
+unexpected_output="$(
+  GH_CALLS_FILE="${calls_file}" \
+    BUDGET_READS_FILE="${budget_reads_file}" \
+    MOCK_INITIAL_BUDGETS="${final_budgets}" \
+    MOCK_FINAL_BUDGETS="${unexpected_budgets}" \
+    MOCK_SECURITY_CONFIGURATIONS='[{"id":123,"name":"Private repositories - paid security disabled"}]' \
+    MOCK_SECURITY_CONFIGURATION_ID=123 \
+    PATH="${mock_bin}:/opt/homebrew/bin:/bin:/usr/bin" \
+    bash "${init_script}" example 2>&1
+)"
+unexpected_status="$?"
+set -e
+
+if [[ "${unexpected_status}" != "1" ]]; then
+  printf 'unexpected budget: expected status 1, got %s\n%s\n' \
+    "${unexpected_status}" "${unexpected_output}" >&2
+  exit 1
+fi
+assert_contains "${unexpected_output}" "ERROR: 停止されていないorganization予算"
+assert_contains "${unexpected_output}" "future_product"

@@ -138,6 +138,22 @@ for budget_spec in "${budget_specs[@]}"; do
     exit 1
   fi
 done
+
+unsafe_budget_names="$(
+  jq -r '[
+    .[] | select(
+      .budget_scope == "organization" and
+      (
+        .budget_amount != 0 or
+        .prevent_further_usage != true
+      )
+    ) | .budget_product_sku
+  ] | unique | join(", ")' <<<"${budgets}"
+)"
+if [ -n "${unsafe_budget_names}" ]; then
+  echo "ERROR: 停止されていないorganization予算: ${unsafe_budget_names}" >&2
+  exit 1
+fi
 echo "OK: 追加従量課金は\$0で停止"
 
 security_payload="$(
