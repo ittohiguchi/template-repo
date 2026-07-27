@@ -19,6 +19,7 @@ tasks:
     desc: 全検証を実行する
     deps:
       - test:gitkeep
+      - test:org-init
       - test:repo-init
     cmds:
       - pre-commit run --all-files
@@ -32,6 +33,16 @@ tasks:
     desc: GitHub リポジトリ初期化スクリプトのテストを実行する
     cmds:
       - bash tests/scripts/test-init-repo-settings.sh
+
+  test:org-init:
+    desc: GitHub organization課金防止スクリプトのテストを実行する
+    cmds:
+      - bash tests/scripts/test-init-org-settings.sh
+
+  org-init:
+    desc: GitHub organizationの追加従量課金を停止する(引数はorganization名)
+    cmds:
+      - bash scripts/init-org-settings.sh {{.CLI_ARGS}}
 
   repo-init:
     desc: GitHub リポジトリ設定を冪等に適用する(引数は scripts/init-repo-settings.sh 参照)
