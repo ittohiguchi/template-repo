@@ -44,6 +44,19 @@ each item's result to the user.
 2. Establish the project commands: lint, format, typecheck, test, build.
    Add each as a task in `Taskfile.yml` with a `desc:`, and hang them under
    the `check` parent task so `task check` stays the full verification suite.
+   For iOS projects with Simulator runtime tests, establish lifecycle
+   ownership during this bootstrap:
+   - Prefer a dedicated, reusable Simulator and preserve its device data
+     between runs.
+   - Make the top-level runtime-test task serialize access to the selected
+     Simulator.
+   - Boot the selected device when needed and shut down that exact UDID on
+     every exit path. Never use a broad cleanup such as `simctl shutdown all`.
+   - Forward `INT` and `TERM` to a running `xcodebuild` process before cleanup.
+   - Add contract tests for success, test failure, interruption, cleanup
+     failure, and concurrent execution.
+   - Add a concise repository-specific invariant to `CLAUDE.md` stating that
+     Simulator runtime tasks own and clean up their selected device.
 3. Create the CI orchestrator `.github/workflows/ci.yaml`:
    - Trigger on pull requests to `main`.
    - Detect changed paths (e.g. `dorny/paths-filter`, SHA-pinned) and run only
