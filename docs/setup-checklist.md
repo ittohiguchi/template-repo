@@ -46,17 +46,27 @@ each item's result to the user.
    the `check` parent task so `task check` stays the full verification suite.
    For iOS projects with Simulator runtime tests, establish lifecycle
    ownership during this bootstrap:
-   - Prefer a dedicated, reusable Simulator and preserve its device data
-     between runs.
-   - Make the top-level runtime-test task serialize access to the selected
-     Simulator.
-   - Boot the selected device when needed and shut down that exact UDID on
-     every exit path. Never use a broad cleanup such as `simctl shutdown all`.
-   - Forward `INT` and `TERM` to a running `xcodebuild` process before cleanup.
-   - Add contract tests for success, test failure, interruption, cleanup
-     failure, and concurrent execution.
-   - Add a concise repository-specific invariant to `CLAUDE.md` stating that
-     Simulator runtime tasks own and clean up their selected device.
+   - Make automated runtime tests ephemeral-only: create a new Simulator for
+     each invocation and delete that exact UDID on every exit path. Never
+     discover or reuse an existing device, and never use broad cleanup such as
+     `simctl shutdown all`. Interactive Xcode sessions stay outside this task.
+   - Serialize the top-level runtime-test task across Git worktrees. Store its
+     owner PID, process group, repository root, generated device name, and UDID
+     in the Git common directory so the record survives worktree deletion.
+   - Start each external phase in a dedicated process group. Bound Simulator
+     creation, boot, and boot readiness separately; also bound `xcodebuild` by
+     both output inactivity and total elapsed time. Keep every limit easy to
+     override through task variables.
+   - On normal exit, `INT`, or `TERM`, stop only the owned process group and
+     delete only the recorded UDID. On the next invocation, recover the same
+     resources after a trapless termination such as `SIGKILL`, but only after
+     matching the persisted ownership record to live state. Fail safely when
+     ownership cannot be verified.
+   - Add contract tests for success, test failure, interruption, each timeout,
+     cleanup failure, concurrent execution, trapless stale-resource recovery,
+     process descendants, and repeated clean runs. Keep this executable task
+     contract as the source of truth instead of duplicating it in
+     repository-specific agent instructions.
 3. Create the CI orchestrator `.github/workflows/ci.yaml`:
    - Trigger on pull requests to `main`.
    - Detect changed paths (e.g. `dorny/paths-filter`, SHA-pinned) and run only
