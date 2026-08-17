@@ -51,7 +51,9 @@ permanently exempt from every rule in sections 1–2.
   `*Repository` / `*Error`.
 - Test the rules themselves: keep fixture files with annotated expected
   findings and a check that fails when a rule stops matching them.
-- Wire all of the above into `Taskfile.yml` targets, pre-commit, and `ci.yaml`.
+- Wire all of the above into `Taskfile.yml`. Put only fast changed-scope
+  contracts in pre-commit and `general-pr-fast.yaml`; keep the complete
+  contracts under `task check` for post-merge verification.
 
 ## 3. Environment model
 
@@ -68,9 +70,17 @@ permanently exempt from every rule in sections 1–2.
 ## 4. Deploys: consolidated in GitHub Actions
 
 - All deploys run from GitHub Actions. No deploys from developer machines.
-- `cd-staging.yaml`: auto-deploys `main` on push, path-filtered to build
-  inputs (source, lockfiles, Dockerfile) so docs/test-only changes do not
-  redeploy.
+- `cd-staging.yaml`: a reusable workflow called only after
+  `general-main-verification.yaml` succeeds for the same SHA. It is
+  path-filtered to build inputs so docs/test-only changes can reuse the
+  previously validated artifact without redeploying.
+- A successful staging deploy and smoke test records `release/staging` on the
+  exact commit SHA. A staging failure updates the same deduplicated main
+  verification issue; recovery closes it only when all required contexts pass.
+- Set `REQUIRED_STATUS_CONTEXTS` to
+  `release/main-verification,release/secret-scan,release/staging` in every
+  workflow that calls `report-main-verification.sh`, so an earlier check cannot
+  close the failure issue before staging finishes.
 - `cd-prod.yaml`: triggered only by pushing an annotated tag matching
   `prod-YYYY.MM.DD-NN`. `workflow_dispatch` exists only as an emergency
   fallback and requires an explicit `git_ref`.
@@ -83,14 +93,15 @@ permanently exempt from every rule in sections 1–2.
 
 - Production releases are immutable annotated tags `prod-YYYY.MM.DD-NN`
   (`NN` = zero-padded sequence within the calendar day, Asia/Tokyo).
-- Tag only commits that are reachable from `origin/main` and already
-  validated on staging.
+- Tag only commits that are reachable from `origin/main` and have successful
+  `release/main-verification`, `release/secret-scan`, and `release/staging`
+  statuses on that exact SHA.
 - Never move, delete, or recreate a prod tag. Retries and rollbacks cut a
   new tag pointing at the appropriate commit.
 - Create a `prod-tag-release` skill under `.claude/skills/` with a helper
-  script that picks the next tag number and fails if the target commit is
-  not on `origin/main`. The release procedure must be runnable by an agent
-  without improvisation.
+  script that picks the next tag number and invokes
+  `scripts/check-release-eligibility.sh` before creating the tag. The release
+  procedure must be runnable by an agent without improvisation.
 
 ## 6. Guardrails for audits and reviews
 

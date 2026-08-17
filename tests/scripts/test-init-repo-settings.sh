@@ -90,6 +90,7 @@ assert_contains "${private_calls}" '"status": "disabled"'
 assert_not_contains "${private_calls}" '"status": "enabled"'
 assert_contains "${private_output}" "private repository: secret scanning + push protection 無効"
 assert_contains "${private_output}" "squash のみ / auto-merge / ブランチ更新・自動削除"
+assert_contains "${private_calls}" '"context": "pr-fast"'
 
 : >"${calls_file}"
 public_output="$(

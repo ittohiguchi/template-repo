@@ -1,0 +1,84 @@
+name: main-verification
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: 検証するmain上のcommit SHA
+        required: true
+        type: string
+
+concurrency:
+  group: main-verification
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.git_ref || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - run: pipx install --force pre-commit==4.6.2
+      - name: 全検証を実行
+        run: task check
+
+  certify:
+    if: ${{ always() && needs.verify.result != 'cancelled' }}
+    needs: [verify]
+    permissions:
+      contents: read
+      issues: write
+      statuses: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.git_ref || github.sha }}
+          persist-credentials: false
+      - name: 対象commitへ検証結果を記録
+        id: result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERIFY_RESULT: ${{ needs.verify.result }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          state=failure
+          if [ "$VERIFY_RESULT" = success ]; then
+            state=success
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${sha}" \
+            -f state="$state" \
+            -f context=release/main-verification \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -f description="main全検証: ${state}"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: main
+          path: .release-automation
+          persist-credentials: false
+      - name: 重複を排除した失敗Issueを更新
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT_SHA: ${{ steps.result.outputs.sha }}
+          RESULT_STATE: ${{ steps.result.outputs.state }}
+        run: |
+          .release-automation/scripts/report-main-verification.sh \
+            "$RESULT_STATE" \
+            "$RESULT_SHA" \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            main-verification

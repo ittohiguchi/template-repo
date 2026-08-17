@@ -17,11 +17,14 @@ each item's result to the user.
 - `.pre-commit-config.yaml`: hygiene hooks, gitleaks (secret detection),
   actionlint + zizmor (GitHub Actions lint/security), workflow schema
   validation, Renovate config validation.
-- `.github/workflows/general-pre-commit.yaml`: runs all pre-commit hooks on
-  every PR and push to main.
-- `.github/workflows/general-secret-scan.yaml`: scans the full git history
-  with gitleaks (version pinned to the pre-commit rev) on PRs, pushes to
-  main, and weekly.
+- `.github/workflows/general-pr-fast.yaml`: runs pre-commit hooks only for the
+  PR diff. Its `pr-fast` job is the stable required check.
+- `.github/workflows/general-main-verification.yaml`: runs `task check` for
+  each surviving `main` commit, records `release/main-verification` on the
+  exact SHA, and maintains one failure issue.
+- `.github/workflows/general-secret-scan.yaml`: scans full git history on
+  pushes to `main`, manual revalidation, and weekly runs. It records
+  `release/secret-scan` on the exact SHA.
 - `renovate.json5`: dependency updates (GitHub Actions SHAs, pre-commit hook
   revs, language lockfiles) via the Mend Renovate App installed on the org.
 - `.gitleaks.toml`: extends the default gitleaks ruleset; add allowlist
@@ -42,8 +45,12 @@ each item's result to the user.
    Verify the Renovate App covers this repository — it is installed at the
    organization level for all repositories: <https://github.com/apps/renovate>.
 2. Establish the project commands: lint, format, typecheck, test, build.
-   Add each as a task in `Taskfile.yml` with a `desc:`, and hang them under
-   the `check` parent task so `task check` stays the full verification suite.
+   Add each as a task in `Taskfile.yml` with a `desc:`. Keep `task check` as
+   the complete production verification suite. Define separate changed-scope
+   task targets for fast lint, type checks, and tests that agents can run
+   locally before a PR and that `general-pr-fast.yaml` can select by path.
+   Keep commit hooks deterministic and fast; do not attach full builds,
+   integration tests, or e2e suites to pre-commit.
    For iOS projects with Simulator runtime tests, establish lifecycle
    ownership during this bootstrap:
    - Make automated runtime tests ephemeral-only: create a new Simulator for
@@ -67,27 +74,31 @@ each item's result to the user.
      process descendants, and repeated clean runs. Keep this executable task
      contract as the source of truth instead of duplicating it in
      repository-specific agent instructions.
-3. Create the CI orchestrator `.github/workflows/ci.yaml`:
-   - Trigger on pull requests to `main`.
-   - Detect changed paths (e.g. `dorny/paths-filter`, SHA-pinned) and run only
-     the affected language jobs; gate heavy suites (integration/e2e) on the
-     paths that actually feed them.
-   - Jobs run the same `task` targets developers use locally (install task
-     via a SHA-pinned setup action).
-   - As the repo grows, split reusable workflows named `{lang}-{what}.yaml`
-     and keep `ci.yaml` as the orchestrator.
-   - Document the workflow architecture and "how to add a language" in
-     `.github/workflows/README.md`.
-   - Then rerun `task repo-init -- --checks pre-commit,gitleaks,ci` to make
-     the `ci` check required.
-4. Add language-specific lint/format hooks to `.pre-commit-config.yaml`.
-5. Update `.env.example` with the real variable names (placeholder values
+3. Extend `.github/workflows/general-pr-fast.yaml` for the selected stack:
+   - Keep `pull_request` to `main` as its only automatic trigger.
+   - Detect changed paths with a SHA-pinned action or an equivalent local
+     script and run only affected fast task targets.
+   - Keep the stable `pr-fast` job as the only required project check. It must
+     report success even when no project path is affected.
+   - Target completion within five minutes. Move full builds, complete test
+     suites, integration tests, and e2e tests to `task check` when the target
+     is exceeded.
+   - Split reusable workflows named `{lang}-{what}.yaml` only when the
+     orchestrator remains easier to understand than one job.
+   - Document the resulting workflow in `.github/workflows/README.md`.
+4. Extend `general-main-verification.yaml` so `task check` covers every
+   production build and complete test suite. Keep manual `git_ref`
+   revalidation for an older `main` commit. Do not make its status a PR
+   required check.
+5. Add only fast language-specific lint/format hooks to
+   `.pre-commit-config.yaml`.
+6. Update `.env.example` with the real variable names (placeholder values
    only; never real values).
-6. Run `task setup` locally to install the pre-commit git hook.
-7. Replace the description at the top of `CLAUDE.md` with a one-paragraph
+7. Run `task setup` locally to install the pre-commit git hook.
+8. Replace the description at the top of `CLAUDE.md` with a one-paragraph
    project description. Keep every other section; the repository starts in
    the exploration phase — work in `sandbox/`.
-8. After the real maintainers and repository visibility are known:
+9. After the real maintainers and repository visibility are known:
    - Add `.github/CODEOWNERS` with actual users or teams; do not commit
      placeholder owners.
    - Before accepting external users or contributions, add a Japanese
