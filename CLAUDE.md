@@ -45,9 +45,16 @@ graduates from `sandbox/` into `apps/` by being restructured to conform.
 - All dev commands (setup, lint, format, typecheck, test, build) go through
   `Taskfile.yml`. Discover them with `task --list`. CI jobs must run the same
   task targets developers run locally.
+- Agents run changed-scope validation locally before opening a PR. Required PR
+  CI stays fast and high-value; full tests, production builds, integration
+  checks, and staging validation run after merge for the exact `main` commit.
+- A broken `main` is allowed temporarily. Production eligibility belongs to an
+  exact commit SHA that has every required `release/*` status, not to the
+  current health of the branch.
 - Branch model: single `main`. All PRs target `main`. Production releases are
   immutable annotated tags `prod-YYYY.MM.DD-NN` on commits reachable from
-  `main`; retries and rollbacks cut a new tag, never move one.
+  `main` and marked release-ready; retries and rollbacks cut a new tag, never
+  move one.
 - Pin GitHub Actions to a full commit SHA with a version tag comment.
 - Dependency updates are Renovate's job (`renovate.json5`): GitHub Actions
   SHAs, pre-commit hook revs, and language lockfiles. Do not add dependabot
@@ -57,7 +64,7 @@ graduates from `sandbox/` into `apps/` by being restructured to conform.
 - `task repo-init` enables GitHub secret scanning only for public repositories.
   Private repositories must keep metered Advanced Security features disabled,
   and initialization must fail if the resulting GitHub settings disagree.
-- Workflow files follow `{prefix}-{what}.yaml` naming (`general-pre-commit`,
+- Workflow files follow `{prefix}-{what}.yaml` naming (`general-pr-fast`,
   `python-lint`, `terraform-apply`). Conventions and the orchestrator pattern
   are documented in `.github/workflows/README.md`.
 

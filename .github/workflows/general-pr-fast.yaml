@@ -1,22 +1,28 @@
-name: pre-commit
+name: pr-fast
 
 on:
   pull_request:
-  push:
     branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  pre-commit:
+  pr-fast:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          fetch-depth: 0
           persist-credentials: false
+      - uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-      - run: pipx run pre-commit run --all-files --show-diff-on-failure
+      - run: pipx install --force pre-commit==4.6.2
+      - name: PR差分の高速検証を実行
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.sha }}
+        run: task check:pr

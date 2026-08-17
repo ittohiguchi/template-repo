@@ -19,10 +19,29 @@ tasks:
     desc: 全検証を実行する
     deps:
       - test:gitkeep
+      - test:ci-policy
       - test:org-init
+      - test:release-automation
       - test:repo-init
     cmds:
       - pre-commit run --all-files
+
+  check:pr:
+    desc: PR差分に対する高速検証を実行する(BASE_REFとHEAD_REFが必須)
+    cmds:
+      - test -n "$BASE_REF"
+      - test -n "$HEAD_REF"
+      - pre-commit run --from-ref "$BASE_REF" --to-ref "$HEAD_REF"
+
+  test:ci-policy:
+    desc: CIとrelease認証の契約を検証する
+    cmds:
+      - bash tests/scripts/test-ci-policy.sh
+
+  test:release-automation:
+    desc: release認証と失敗Issue集約を検証する
+    cmds:
+      - bash tests/scripts/test-release-automation.sh
 
   test:gitkeep:
     desc: .gitkeep 検出スクリプトのテストを実行する

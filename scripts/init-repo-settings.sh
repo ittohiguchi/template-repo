@@ -3,11 +3,10 @@
 # テンプレートから作った repo にはリポジトリ設定がコピーされないため、必ず一度実行する。
 #
 # 使い方:
-#   scripts/init-repo-settings.sh [--checks pre-commit,gitleaks]
+#   scripts/init-repo-settings.sh [--checks pr-fast]
 #
 # --checks: branch ruleset の required status checks(job 名のカンマ区切り)。
-#   ci.yaml を作成したら `--checks pre-commit,gitleaks,ci` で再実行して required に加える。
-#   ci が存在しない段階で required にすると PR が永久にブロックされるため、既定には含めない。
+# --checksにはマージ前に必須とする軽量なPR checkだけを指定する。
 set -euo pipefail
 
 missing_commands=()
@@ -22,7 +21,7 @@ if [ "${#missing_commands[@]}" -gt 0 ]; then
   exit 1
 fi
 
-CHECKS="pre-commit,gitleaks"
+CHECKS="pr-fast"
 while [ $# -gt 0 ]; do
   case "$1" in
     --checks)

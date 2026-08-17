@@ -9,6 +9,16 @@
   ],
   // pre-commit manager は opt-in
   "pre-commit": { enabled: true },
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^\\.github/workflows/.*\\.yaml$/"],
+      matchStrings: [
+        "pipx install --force (?<depName>pre-commit)==(?<currentValue>[0-9.]+)",
+      ],
+      datasourceTemplate: "pypi",
+    },
+  ],
   // Business: リリース直後の compromise を踏まないため、7日置いてから更新する。
   // 脆弱性対応 PR (vulnerabilityAlerts) はこの待機に縛られない。
   minimumReleaseAge: "7 days",
@@ -16,5 +26,6 @@
   packageRules: [
     { matchManagers: ["github-actions"], groupName: "github-actions" },
     { matchManagers: ["pre-commit"], groupName: "pre-commit hooks" },
+    { matchDepNames: ["pre-commit"], groupName: "pre-commit runtime" },
   ],
 }
