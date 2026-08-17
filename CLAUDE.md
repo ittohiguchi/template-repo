@@ -59,8 +59,14 @@ graduates from `sandbox/` into `apps/` by being restructured to conform.
 - Dependency updates are Renovate's job (`renovate.json5`): GitHub Actions
   SHAs, pre-commit hook revs, and language lockfiles. Do not add dependabot
   config or custom update workflows.
-- Repository settings (branch ruleset, secret scanning, permissions) are
-  applied with `task repo-init`, which must stay idempotent.
+- Repository settings are applied from the scaffold-time
+  `.github/repository-policy.json` with `task repo-init`, which must stay
+  idempotent. Ordinary agent work follows this committed policy without
+  re-evaluating GitHub plan, visibility, or ruleset availability.
+- Run `task repo-init -- --refresh-policy` only after an explicitly requested
+  governance change such as a plan or visibility update. A repository whose
+  policy records advisory enforcement is fully scaffolded even though GitHub
+  does not enforce its required PR check.
 - `task repo-init` enables GitHub secret scanning only for public repositories.
   Private repositories must keep metered Advanced Security features disabled,
   and initialization must fail if the resulting GitHub settings disagree.

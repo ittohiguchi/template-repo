@@ -30,8 +30,10 @@ each item's result to the user.
 - `.gitleaks.toml`: extends the default gitleaks ruleset; add allowlist
   entries there for false positives.
 - `Taskfile.yml`: single entry point for dev commands (`task --list`).
-- `scripts/init-repo-settings.sh` (`task repo-init`): idempotent GitHub
-  repository settings.
+- `scripts/init-repo-settings.sh` (`task repo-init`): capability-aware,
+  idempotent GitHub repository settings. Its first run records the owner type,
+  plan, visibility, ruleset availability, PR checks, and release statuses in
+  `.github/repository-policy.json`.
 - `.github/pull_request_template.md`: captures intent, completion criteria,
   validation, risks, and review questions. The PR body becomes the default
   squash-commit body.
@@ -39,9 +41,17 @@ each item's result to the user.
 
 ## Checklist
 
-1. Run `task repo-init`.
+1. Run `task repo-init`. The first run probes GitHub once and creates
+   `.github/repository-policy.json`; commit that generated policy with the
+   scaffold changes. Repeated runs apply the saved policy without probing
+   capability again. Run `task repo-init -- --refresh-policy` only after an
+   explicitly requested plan or visibility change.
    Confirm that public repositories have secret scanning and push protection
    enabled, while private repositories report both settings as disabled.
+   Confirm that repositories with ruleset support record `enforced`, while a
+   GitHub Free private repository records `advisory` and completes setup
+   without branch protection. Authentication, permission, network, and
+   unexpected API failures must still stop setup before settings are changed.
    Verify the Renovate App covers this repository — it is installed at the
    organization level for all repositories: <https://github.com/apps/renovate>.
 2. Establish the project commands: lint, format, typecheck, test, build.

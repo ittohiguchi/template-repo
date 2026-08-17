@@ -64,6 +64,6 @@ tasks:
       - bash scripts/init-org-settings.sh {{.CLI_ARGS}}
 
   repo-init:
-    desc: GitHub リポジトリ設定を冪等に適用する(引数は scripts/init-repo-settings.sh 参照)
+    desc: repository policyを確定しGitHub設定を冪等に適用する
     cmds:
       - bash scripts/init-repo-settings.sh {{.CLI_ARGS}}
