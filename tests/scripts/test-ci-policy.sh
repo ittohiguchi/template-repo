@@ -43,5 +43,9 @@ assert_contains ".github/workflows/general-secret-scan.yaml" "release/secret-sca
 assert_contains "Taskfile.yml" "check:pr:"
 assert_contains "Taskfile.yml" 'pre-commit run --from-ref "$BASE_REF" --to-ref "$HEAD_REF"'
 assert_contains "scripts/init-repo-settings.sh" 'CHECKS="pr-fast"'
+assert_contains "scripts/init-repo-settings.sh" 'REPOSITORY_POLICY_FILE'
+assert_contains "scripts/init-repo-settings.sh" 'ruleset_reason'
+assert_contains "docs/setup-checklist.md" '.github/repository-policy.json'
+assert_contains "CLAUDE.md" '.github/repository-policy.json'
 assert_contains "docs/product-checklist.md" '`release/main-verification`'
 assert_contains "docs/product-checklist.md" '`release/staging`'
