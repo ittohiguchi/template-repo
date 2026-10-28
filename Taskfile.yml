@@ -19,6 +19,7 @@ tasks:
     desc: 全検証を実行する
     deps:
       - test:gitkeep
+      - test:agent-instructions
       - test:ci-policy
       - test:org-init
       - test:release-automation
@@ -67,3 +68,8 @@ tasks:
     desc: repository policyを確定しGitHub設定を冪等に適用する
     cmds:
       - bash scripts/init-repo-settings.sh {{.CLI_ARGS}}
+
+  test:agent-instructions:
+    desc: 指示ファイルのstage済み変更と限定的なSKIPを検証する
+    cmds:
+      - bash scripts/test-agent-instructions-change.sh

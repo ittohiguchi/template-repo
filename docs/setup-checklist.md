@@ -113,3 +113,11 @@ each item's result to the user.
      placeholder owners.
    - Before accepting external users or contributions, add a Japanese
      `SECURITY.md` with the supported versions and a private reporting route.
+
+## Instruction-change guard
+
+`task setup` also installs the instruction-change guard. It blocks staged
+changes, deletions, renames, and symlink changes to `AGENTS.md` or `CLAUDE.md`
+at any depth. After user confirmation, use
+`SKIP=agent-instructions-change git commit ...` so other checks still run.
+Run `task test:agent-instructions` to exercise the index-based behavior.
