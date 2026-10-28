@@ -39,6 +39,9 @@ graduates from `sandbox/` into `apps/` by being restructured to conform.
 
 ## Repository conventions
 
+- Staged changes to `AGENTS.md` or `CLAUDE.md` at any depth require user
+  authorization. After reviewing an authorized change, skip only this guard
+  with `SKIP=agent-instructions-change git commit ...`; keep all other hooks.
 - `CLAUDE.md` is canonical; `AGENTS.md` is a committed symlink to it.
   `.claude/skills/` is canonical; `.agents/skills` is a committed symlink.
   Never replace a symlink with a regular file.
